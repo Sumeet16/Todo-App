@@ -46,6 +46,12 @@ if (isset($_POST['login'])) {
     }
 }
 
+// Logout
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header('Location: todo.php');
+    exit;
+}
 
 // Redirect to login if not logged in
 if (!isset($_SESSION['user_id'])) {
@@ -128,6 +134,44 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+// Handle Create and Update actions
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
+    $title = $_POST['title'];
+    $description = $_POST['description'];
+    $due_date = $_POST['due_date'];
+
+    if (isset($_POST['id']) && !empty($_POST['id'])) {
+        // Update an existing todo
+        $id = $_POST['id'];
+        $stmt = $conn->prepare("UPDATE todos SET title=?, description=?, due_date=? WHERE id=? AND user_id=?");
+        $stmt->bind_param('sssii', $title, $description, $due_date, $id, $_SESSION['user_id']);
+    } else {
+        // Create a new todo
+        $stmt = $conn->prepare("INSERT INTO todos (title, description, due_date, user_id) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param('sssi', $title, $description, $due_date, $_SESSION['user_id']);
+    }
+    $stmt->execute();
+    header('Location: todo.php');
+    exit;
+}
+
+// Handle Delete action
+if (isset($_GET['delete']) && isset($_SESSION['user_id'])) {
+    $id = $_GET['delete'];
+    $stmt = $conn->prepare("DELETE FROM todos WHERE id=? AND user_id=?");
+    $stmt->bind_param('ii', $id, $_SESSION['user_id']);
+    $stmt->execute();
+    header('Location: todo.php');
+    exit;
+}
+
+// Fetch the todo for editing (if needed)
+$edit_todo = null;
+if (isset($_GET['edit']) && isset($_SESSION['user_id'])) {
+    $id = $_GET['edit'];
+    $result = $conn->query("SELECT * FROM todos WHERE id=$id AND user_id={$_SESSION['user_id']}");
+    $edit_todo = $result->fetch_assoc();
+}
 ?>
 
 <!DOCTYPE html>
@@ -170,7 +214,7 @@ if (!isset($_SESSION['user_id'])) {
         <table class="table">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th>ID</th>
                     <th>Title</th>
                     <th>Description</th>
                     <th>Due Date</th>
@@ -181,25 +225,22 @@ if (!isset($_SESSION['user_id'])) {
             <tbody>
                 <?php
                 $result = $conn->query("SELECT * FROM todos WHERE user_id={$_SESSION['user_id']}");
-                $counter = 1;  // Initialize a counter variable
                 while ($row = $result->fetch_assoc()) {
                     echo "<tr>
-            <td>{$counter}</td> <!-- Display the counter value -->
-            <td>{$row['title']}</td>
-            <td>{$row['description']}</td>
-            <td>{$row['due_date']}</td>
-            <td>{$row['status']}</td>
-            <td>
-                <a href='todo.php?edit={$row['id']}' class='btn btn-warning'>Edit</a>
-                <a href='todo.php?delete={$row['id']}' class='btn btn-danger'>Delete</a>
-            </td>
-        </tr>";
-                    $counter++;  // Increment the counter with each row
+                    <td>{$row['id']}</td>
+                    <td>{$row['title']}</td>
+                    <td>{$row['description']}</td>
+                    <td>{$row['due_date']}</td>
+                    <td>{$row['status']}</td>
+                    <td>
+                        <a href='todo.php?edit={$row['id']}' class='btn btn-warning'>Edit</a>
+                        <a href='todo.php?delete={$row['id']}' class='btn btn-danger'>Delete</a>
+                    </td>
+                </tr>";
                 }
                 ?>
             </tbody>
         </table>
-
     </div>
 
 </body>
