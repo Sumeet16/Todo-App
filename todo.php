@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 session_start();
 
 // Database connection
@@ -139,22 +141,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
     $title = $_POST['title'];
     $description = $_POST['description'];
     $due_date = $_POST['due_date'];
-    $status = $_POST['status']; // Status field added
+    $status = $_POST['status']; // Get the status from the form
 
     if (isset($_POST['id']) && !empty($_POST['id'])) {
         // Update an existing todo
         $id = $_POST['id'];
         $stmt = $conn->prepare("UPDATE todos SET title=?, description=?, due_date=?, status=? WHERE id=? AND user_id=?");
-        $stmt->bind_param('sssiii', $title, $description, $due_date, $status, $id, $_SESSION['user_id']);
+        $stmt->bind_param('ssssii', $title, $description, $due_date, $status, $id, $_SESSION['user_id']);
     } else {
         // Create a new todo
         $stmt = $conn->prepare("INSERT INTO todos (title, description, due_date, status, user_id) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param('sssii', $title, $description, $due_date, $status, $_SESSION['user_id']);
+        $stmt->bind_param('ssssi', $title, $description, $due_date, $status, $_SESSION['user_id']);
     }
     $stmt->execute();
     header('Location: todo.php');
     exit;
 }
+
 
 // Handle Delete action
 if (isset($_GET['delete']) && isset($_SESSION['user_id'])) {
@@ -207,20 +210,19 @@ if (isset($_GET['edit']) && isset($_SESSION['user_id'])) {
             </div>
             <div class="form-group">
                 <label for="status">Status</label>
-                <select name="status" class="form-control">
-                    <option value="1" <?= (isset($edit_todo) && $edit_todo['status'] == 1) ? 'selected' : '' ?>>Complete</option>
-                    <option value="0" <?= (isset($edit_todo) && $edit_todo['status'] == 0) ? 'selected' : '' ?>>Pending</option>
+                <select name="status" class="form-control" required>
+                    <option value="pending" <?= isset($edit_todo) && $edit_todo['status'] === 'pending' ? 'selected' : '' ?>>Pending</option>
+                    <option value="completed" <?= isset($edit_todo) && $edit_todo['status'] === 'completed' ? 'selected' : '' ?>>Completed</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary"><?= $edit_todo ? 'Update' : 'Add' ?> Todo</button>
+            <button type="submit" class="btn btn-primary btn-block"><?= isset($edit_todo) ? 'Update' : 'Add' ?> Todo</button>
         </form>
 
-        <!-- Display Current Todos -->
-        <h3>Current Todos</h3>
-        <table class="table">
+        <!-- Todo List -->
+        <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th>#</th> <!-- Change from ID to # -->
                     <th>Title</th>
                     <th>Description</th>
                     <th>Due Date</th>
@@ -231,24 +233,24 @@ if (isset($_GET['edit']) && isset($_SESSION['user_id'])) {
             <tbody>
                 <?php
                 $result = $conn->query("SELECT * FROM todos WHERE user_id={$_SESSION['user_id']}");
-                $counter = 1;
-                while ($row = $result->fetch_assoc()) {
-                    echo "<tr>
-                        <td>{$counter}</td>
-                        <td>{$row['title']}</td>
-                        <td>{$row['description']}</td>
-                        <td>{$row['due_date']}</td>
-                        <td>" . ($row['status'] ? 'Complete' : 'Pending') . "</td>
-                        <td>
-                            <a href='todo.php?edit={$row['id']}' class='btn btn-warning'>Edit</a>
-                            <a href='todo.php?delete={$row['id']}' class='btn btn-danger'>Delete</a>
-                        </td>
-                    </tr>";
-                    $counter++;
-                }
+                $counter = 1; // Initialize a counter variable
+                while ($todo = $result->fetch_assoc()) {
                 ?>
+                    <tr>
+                        <td><?= $counter++ ?></td> <!-- Display the counter and increment it -->
+                        <td><?= htmlspecialchars($todo['title']) ?></td> <!-- Use htmlspecialchars for security -->
+                        <td><?= htmlspecialchars($todo['description']) ?></td> <!-- Use htmlspecialchars for security -->
+                        <td><?= htmlspecialchars($todo['due_date']) ?></td> <!-- Use htmlspecialchars for security -->
+                        <td><?= htmlspecialchars($todo['status']) ?></td> <!-- Use htmlspecialchars for security -->
+                        <td>
+                            <a href="todo.php?edit=<?= $todo['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
+                            <a href="todo.php?delete=<?= $todo['id'] ?>" class="btn btn-danger btn-sm">Delete</a>
+                        </td>
+                    </tr>
+                <?php } ?>
             </tbody>
         </table>
+
     </div>
 
     <!-- Bootstrap JS and dependencies -->
