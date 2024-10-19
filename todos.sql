@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Oct 19, 2024 at 02:14 AM
+-- Generation Time: Oct 19, 2024 at 02:17 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -43,6 +43,26 @@ CREATE TABLE `todos` (
 INSERT INTO `todos` (`id`, `title`, `description`, `due_date`, `status`, `user_id`) VALUES
 (6, 'regerge', 'rgergergerg', '2024-10-26', 'pending', 1);
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `username` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `username`, `password`) VALUES
+(1, 'admin', '$2y$10$nelV/rqlyAD1bmBuK5c/5u55nhPQWTOJuA1WR20gJOngi7lYZWH3.'),
+(2, 'ipek', '$2y$10$6fBGKg6Pajz3PKu4wj.U0.Rsx6EmD.wvXHJI15DmXfUePyiEt0XK2');
+
 --
 -- Indexes for dumped tables
 --
@@ -55,6 +75,13 @@ ALTER TABLE `todos`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -63,6 +90,12 @@ ALTER TABLE `todos`
 --
 ALTER TABLE `todos`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
