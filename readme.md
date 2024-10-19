@@ -31,4 +31,4 @@ A simple Todo Application built with PHP and MySQL, allowing users to create, re
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/todo-app.git
+   git clone https://github.com/Sumeet16/Todo-App.git
